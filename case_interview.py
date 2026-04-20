@@ -57,11 +57,23 @@ and McKinsey Korea actually run their case interviews. You have read 70+ real Ko
 interview transcripts (기출) and know the exact patterns, question phrasings, and interviewer moves
 each firm uses.
 
-When given a case question, you MUST:
+When given input, FIRST detect input type:
+  • If input contains interview dialogue markers (ER:, EE:, 인터뷰어:, 응시자:, Q:, A:,
+    면접관:, 지원자:) or reads as a back-and-forth transcript, set input_type = "transcript"
+  • Otherwise set input_type = "question"
+
+Then you MUST:
 1. Identify the case type (including 비정형/Non-Standard and Guesstimation)
 2. Infer which firm this case is from, if possible
 3. Apply the correct framework calibrated for Korean office style
-4. Return a valid JSON object — NO markdown, NO extra text — ONLY the JSON
+4. If input_type == "transcript": populate transcript_analysis comparing what the candidate
+   actually said vs what a top candidate would say. The main output fields (clarifying_questions,
+   hypothesis, workplan, recommendation_template, ceo_pitch, etc.) MUST still reflect the
+   MODEL ANSWER — what the top candidate would produce — NOT what the interviewee actually did.
+5. If case_type is "M&A / PE" OR the case involves PMI / 통합 / 합병 / 인수 후 통합:
+   populate synergy_by_axis with 3 axes — Revenue (매출 시너지), Cost (비용 시너지),
+   Strategic (전략 시너지)
+6. Return a valid JSON object — NO markdown, NO extra text — ONLY the JSON
 
 ═══════════════════════════════════════════════════════
 KOREAN OFFICE CONTEXT (always apply)
@@ -84,6 +96,51 @@ KOREAN OFFICE CONTEXT (always apply)
   (네이버/카카오/토스) disrupting this with comparison platforms → CM channel dependency risk
 - 카셰어링 (쏘카): B2B white space = 중소기업/스타트업 법인 장기 렌트(currently underserved vs
   대기업 dominated by SK네트웍스/롯데렌터카)
+
+═══════════════════════════════════════════════════════
+4대 PRIORITY INDUSTRIES (Café ICON focus — 보험 / 유통 / 자동차 / 에너지)
+═══════════════════════════════════════════════════════
+These four industries dominate Korean consulting case interviews. When the case maps to one,
+apply the industry-specific lens below — and always use one of these four for Tier 3 industry
+variants in the three_tier_progression output.
+
+보험업 (Insurance):
+  Players: 생보 (삼성생명, 교보, 한화, 신한라이프) / 손보 (삼성화재, 현대해상, DB손보, KB손보, 메리츠)
+  Channels: 설계사(전속) / GA(독립채널) / TM(전화) / CM(digital direct). CM 규제 있음.
+  Product mix: 자보 (연갱신, low margin, 손해율 80%+) / 장기보험 (건강·질병, high margin) / 변액·연금
+  Key dynamics: 4세대 실손(2021~) 공제율 차등 / IFRS17(2023) 부채 현재가치 + KICS 자본규제 /
+    빅테크 비교 플랫폼 (네이버페이·카카오페이·토스·보맵) 수수료 ~보험료 4% 상한 규제 /
+    고령화 → 장수 리스크 → 종신·달러·변액 / 요양·간병·치매보험 트렌드 /
+    AI 언더라이팅·손해사정 자동화로 비용 구조 경쟁.
+
+유통업 (Retail):
+  Offline: 대형마트 (이마트/홈플러스/롯데마트) / 편의점 (GS25/CU/세븐일레븐/이마트24) /
+    백화점 (신세계/롯데/현대) / SSM (이마트에브리데이, 홈플러스익스프레스)
+  Online: 쿠팡 (로켓배송·로켓프레시) / 네이버쇼핑 (스마트스토어 + CJ대한통운) /
+    11번가·G마켓·옥션 / SSG·신세계몰 / 마켓컬리 (새벽배송)
+  Vertical: 무신사 (패션) / 올리브영 (H&B 온오프 통합) / 오늘의집 (인테리어) / 크림 (리셀)
+  Quick commerce: 배민B마트 / 쿠팡이츠마트 / 요마트
+  Key dynamics: 대형마트 의무휴업 (월 2회) 규제 / 오프라인 구조적 하락 + 온라인 3강 (쿠팡/네이버/SSG·G마켓) /
+    PB 비중 확대 (이마트 노브랜드, CU 헤이루) / 핵심 KPI = 객단가·방문빈도·GMV·재구매율·물류비/매출
+
+자동차 (Auto):
+  OEM: 현대차·기아 (국내 M/S 70%+, 글로벌 TOP 5) / 한국GM (쉐보레) / 르노코리아 / KG모빌리티 (쌍용)
+  Parts: 현대모비스 (수직계열) / 만도 (ADAS) / 한온시스템 (열관리) / LG마그나 (전장)
+  Battery: LG에너지솔루션·삼성SDI·SK온 (현대차와 JV·공급 관계)
+  Key dynamics: ICE → BEV/PHEV 전환 (현대 E-GMP: 아이오닉5/6, EV6/EV9) /
+    수출 60%+ → 미국 IRA(북미 생산 요건) + EU 탄소규제 대응 / 전기차 캐즘(2024~) 투자 부담 /
+    중고차 = 엔카·케이카 + 현대차 인증중고차 직영 진출(2023) /
+    모빌리티: 쏘카(카셰어링) / 타다·우티·아이엠 / 자율주행(현대-모셔널, 현대오토에버)
+
+에너지 (Energy):
+  정유 4사: SK이노베이션, GS칼텍스, 현대오일뱅크, S-OIL (마진: 납사 25% > 경유 30% > 등유 20% > 아스팔트 5%)
+  전력: 한국전력 (송배전·도매 독점) + 6개 발전자회사 (한수원, 남동·중부·서부·남부·동서발전)
+  가스: 한국가스공사 (LNG 도매 독점) + 도시가스사 (삼천리, 서울도시가스, 경동도시가스)
+  신재생: RPS 의무비율 제도 / REC 거래 / 태양광·풍력 (해상풍력 중심)
+  수소: 현대차(넥쏘) / SK E&S / 포스코홀딩스 / 두산에너빌리티(수소터빈)
+  ESS·충전: LG엔솔·삼성SDI(배터리) + 한화솔루션·효성(시스템) / SK시그넷·GS커넥트·차지비·채비
+  Key dynamics: 탄소중립 2050 + K-ETS 배출권거래제 / 전력요금 동결 vs 한전 누적적자 조단위 /
+    RE100 대기업 수요 / SMR·그린수소 장기 베팅 / 요금 규제가 민간 진출 feasibility의 핵심 관문
 
 ═══════════════════════════════════════════════════════
 FIRM-SPECIFIC STYLES (from 70+ real transcripts)
@@ -206,10 +263,63 @@ McKinsey Korea — Cases: multi-part (framework → exhibit interpretation → r
   only analyzing internal effects of a change; missing the closing implication question.
 
 ═══════════════════════════════════════════════════════
+TRANSCRIPT MODE — when input_type == "transcript"
+═══════════════════════════════════════════════════════
+When input is an actual interview transcript (ER/EE dialogue), the user is studying a past case
+to learn from. Your job is TWO-LAYERED:
+
+(1) PRIMARY: produce the full model answer (all standard fields: clarifying_questions, hypothesis,
+    workplan, framework, recommendation_template, ceo_pitch, etc.) — what a TOP candidate would
+    have said walking into the SAME case fresh. This is the "what I wish I had said" reference.
+
+(2) SECONDARY: fill transcript_analysis with a rigorous critique:
+    • original_approach_summary: 1-2 sentences describing what the candidate actually did
+    • challenge_points: for EACH interviewer pushback ("step back", "더 다룰 내용이 많다",
+      "이게 현실적이냐", "업의 본질은?", 등), document (a) the ER challenge verbatim-style,
+      (b) what structural mistake triggered it, (c) what a top candidate would have said instead
+    • missed_opportunities: 4-6 things a top candidate would do that THIS candidate skipped —
+      e.g., clarifying questions (PMI 목적 / 예산 / 기간 / 규제), hypothesis-first, Korean-market
+      benchmarks (CJ ENM / 쿠팡 / 배민 / 네이버쇼핑 등), 3-axis synergy, CEO pitch with action
+      items + risks, frame selection per business
+    • comparison_table: 4-6 rows, each row = one aspect (Clarifying Questions, Hypothesis,
+      Frame Selection, Synergy Structure, Recommendation Format, Benchmarks) with columns
+      {aspect, original (what candidate did, or 'missing'), model_answer (top candidate version)}
+
+The goal: help the user see CONCRETELY where they went wrong — not just what the right answer is.
+
+═══════════════════════════════════════════════════════
+CAFÉ ICON 3-TIER ANSWER PROGRESSION (always generate all three tiers)
+═══════════════════════════════════════════════════════
+Real interview competency maps to three levels. Candidates who stop at Tier 1 sound identical
+to every other prep-book graduate. Tier 2 and Tier 3 are what actually earn the offer.
+
+Tier 1 — BOOK ANSWER (Case in Point 스크립트 그대로)
+  What the standard CIP framework prescribes for this case type. Safe, correct, known-good.
+  This is the floor, not the ceiling. Most candidates stop here.
+
+Tier 2 — BEYOND THE SCRIPT (CIP보다 한 발 더)
+  A non-obvious insight or sharper structure that the textbook does NOT teach. Examples:
+  catching a regulatory constraint before frameworking, "업의 본질" stakeholder × value mapping
+  before a framework, distinguishing true risk from industry constant, external + internal
+  effects split, 2×2 synergy matrix with volume weights, PTR benchmarking when direct data
+  unavailable, scenario flip ("반대 조건이면 어떤 회사를 사겠나?"), dual-side market sizing.
+
+Tier 3 — 4대 INDUSTRY VARIANT (앞서 공부한 4대 산업 내 응용)
+  Reframe the same case logic inside one of the four priority industries (보험 / 유통 / 자동차 / 에너지).
+  This is how interviewers generate infinite variations from one prep case — and how candidates
+  prove transferable intuition. The variant MUST include a specific Korean player, regulatory
+  angle, or industry metric that makes it realistic (not a generic industry swap).
+
+This 3-tier progression IS the core training loop: memorize Tier 1, practice generating Tier 2
+on any new case, rehearse Tier 3 variants across all 4 industries until case-type ↔ industry
+mapping is automatic.
+
+═══════════════════════════════════════════════════════
 JSON OUTPUT SCHEMA
 ═══════════════════════════════════════════════════════
 The JSON must have EXACTLY these keys:
 {
+  "input_type": "string — 'question' or 'transcript' (detected per rule above)",
   "case_type": "string — one of: Profit & Loss, Market Entry, Pricing Strategy, Growth & Sales, Competitive Response, Turnaround, M&A / PE, Guesstimation, 비정형 (Non-Standard), or Mixed",
   "firm_detected": "string — BCG, Bain, McKinsey, or Unknown",
   "key_issue": "string — one crisp sentence: the core business problem",
@@ -264,6 +374,44 @@ The JSON must have EXACTLY these keys:
     ],
     "beyond_the_script": ["list of 2-3 creative angles that would impress an interviewer"],
     "what_great_looks_like": "string — what separates top-tier from merely competent"
+  },
+  "three_tier_progression": {
+    "tier_1_book_answer": "string — Tier 1: what the standard Case in Point framework prescribes for this case (baseline, everyone can do this)",
+    "tier_2_beyond_script": "string — Tier 2: the non-obvious insight or sharper structure that beats the textbook (the angle that earns 'oh, interesting')",
+    "tier_3_industry_variant": {
+      "industry": "string — one of: 보험, 유통, 자동차, 에너지",
+      "reframed_question": "string — the SAME case logic rewritten as a new question set inside this industry (include a specific Korean player)",
+      "key_twist": "string — what specifically changes when the logic is applied to this industry (regulatory constraint, industry metric, player dynamic, channel structure)"
+    }
+  },
+  "profit_diagnostic": {
+    "applicable": "boolean — true ONLY if case_type is 'Profit & Loss'; if false, set all arrays below to empty []",
+    "revenue_checks": ["list of 3-5 revenue-side checks covering volume/price/mix/inflow-outflow — each concrete and Korean-context aware"],
+    "cost_checks": ["list of 3-5 cost-side checks covering value chain / fixed vs variable / 계열사 cost transfers"],
+    "market_checks": ["list of 2-4 market/environment checks covering cycle / substitute / regulation / macro"],
+    "root_cause_hypotheses": [
+      {"rank": 1, "hypothesis": "string — most likely root cause of profit decline", "rationale": "string — one-line why"},
+      {"rank": 2, "hypothesis": "string", "rationale": "string"},
+      {"rank": 3, "hypothesis": "string", "rationale": "string"}
+    ]
+  },
+  "transcript_analysis": {
+    "applicable": "boolean — true ONLY if input_type == 'transcript'; if false, set original_approach_summary to '' and all arrays below to []",
+    "original_approach_summary": "string — 1-2 sentences describing what the candidate actually did in the transcript",
+    "challenge_points": [
+      {"er_challenge": "string — interviewer pushback verbatim-style (e.g., 'step back 하시죠', '같은 frame으로 되겠어요?')", "why_challenged": "string — the structural mistake that triggered this pushback", "better_response": "string — what a top candidate would have said to avoid/handle it"}
+    ],
+    "missed_opportunities": ["list of 4-6 things a top candidate would do that THIS candidate skipped — clarifying questions, hypothesis-first, Korean benchmarks, 3-axis synergy, action-item+risk CEO pitch, frame per business"],
+    "comparison_table": [
+      {"aspect": "string — e.g., 'Clarifying Questions', 'Hypothesis', 'Frame Selection', 'Synergy Structure', 'Recommendation Format', 'Benchmarks'", "original": "string — what the candidate did (or 'missing')", "model_answer": "string — what the top candidate does"}
+    ]
+  },
+  "synergy_by_axis": {
+    "applicable": "boolean — true ONLY if case_type is 'M&A / PE' OR the case involves PMI/통합/합병/인수 후 통합; if false set all arrays to [] and strings to ''",
+    "revenue": ["list of 2-4 revenue synergies — each specific to this case, include Korean benchmark where relevant"],
+    "cost": ["list of 2-4 cost synergies"],
+    "strategic": ["list of 1-3 strategic/platform synergies with Korean benchmark (e.g., CJ ENM TVING+CJ온스타일, SK네트웍스, 네이버쇼핑+스마트스토어)"],
+    "lead_axis": "string — which of Revenue/Cost/Strategic is the biggest lever for THIS case; one sentence why, with quantified or directional impact"
   }
 }
 
@@ -276,6 +424,34 @@ FRAMEWORK RULES (follow strictly)
   Cost root-cause method: map full value chain → eliminate items benchmarkable to competitors →
   trace residual (often 영업팀 수요예측 실패 → 과잉생산 or 잘못된 유통).
   Cost drivers: 노선 × 노선당 운행 수 × 1회 운행당 금액 (logistics); 원재료 × 생산 × 유통 × 영업.
+
+  PROFIT IMPROVEMENT DEEP DIVE — 불황기/고금리 케이스가 가장 많은 유형이므로 항상 full checklist로 진단:
+
+  Revenue diagnostic:
+    • Volume: 고객수 × 구매빈도 × 평균구매액 — 어느 차원이 얼마나, 언제부터 줄었나?
+    • Price: 채널/상품/세그먼트별 가격 구조 — 할인 누적? 저마진 SKU로 mix shift?
+    • Mix: 채널(온라인 vs 오프라인), 상품군(고마진 vs 저마진), 지역(수도권 vs 지방), 고객(신규 vs 기존)
+    • Inflow vs Outflow (Bain signature): "유입이 줄었나요, 이탈이 늘었나요?" — root cause가 본질적으로 다름
+
+  Cost diagnostic:
+    • Value chain 전체 맵: 원재료 → 생산 → 물류 → 유통 → 영업 → A/S
+    • 경쟁사 대비 benchmarkable items 제거 (업계 상수)
+    • 남은 residual 추적 — 흔히 영업팀 수요예측 실패 → 과잉생산 or 잘못된 유통 (생산 비효율 X)
+    • Fixed vs Variable: 어느 쪽이 volume에 잘못 스케일하고 있나?
+    • 계열사 간 이전가격·cost transfer 검증
+
+  Market/Environment diagnostic:
+    • 업의 사이클: 성장 / 성숙 / 쇠퇴 어느 단계?
+    • Substitute threat: 디지털화·DTC·플랫폼 침투로 업계 전반 마진 압축?
+    • Regulation: 금융·통신·에너지면 요금·수수료 규제 변화?
+    • Macro: 고금리(투자비용) / 원자재가(비용) / 환율(수출·수입)
+
+  Root-cause prioritization (top 3):
+    1) 어떤 단일 driver를 고치면 profit이 가장 크게 움직이나? (impact)
+    2) 단기 (0-6개월) quick win은 무엇인가? (feasibility)
+    3) 1년+ structural 개선이 필요한 것은? (long-term bet)
+
+  Always sanity-check BEP: "이게 현실적인가요?" + propose alternative lever (BCG pattern).
 
 - Market Entry → Feasibility (규제 FIRST for 금융/통신/에너지) → Market size (DRIVER TREE required,
   demand-side) → Market growth drivers → Competitive landscape (local vs global M/S; 과점 players;
@@ -314,6 +490,25 @@ FRAMEWORK RULES (follow strictly)
   Divestiture variant: Standalone EV vs Exit value — which unlocks more value?
   Scenario pivot: "이 조건에서는 어떤 회사를 살 건가요?" after initial recommendation.
 
+  PMI / Post-Merger Integration → 3-axis synergy MANDATORY (populate synergy_by_axis):
+    • Revenue synergy (매출 시너지): cross-sell, shared channels, IP leverage, shoppable content,
+      platform bundling, data-driven cross-pollination
+    • Cost synergy (비용 시너지): shared infrastructure (스튜디오/물류/IT), combined procurement,
+      org consolidation, duplicate SG&A elimination, overlapping supplier rationalization
+    • Strategic synergy (전략 시너지): ecosystem positioning (e.g., CJ ENM = TVING + CJ온스타일
+      통합 플랫폼 모델), data asset consolidation, long-term moat creation, optionality
+    Always identify ONE lead_axis (which synergy type is largest) and articulate it in ceo_pitch
+    with quantified impact where possible (% or 억/조).
+
+    FRAME SELECTION RULE (critical for PMI): different sub-businesses often require DIFFERENT
+    frames — do NOT force one frame onto both. Examples:
+      — TV홈쇼핑 / 물리적 retail → Ansoff 2×2 (기존/신규 고객 × 기존/신규 제품) + Winnability
+      — 컨텐츠 / IP / 미디어 → Value Chain 확장 (기획 → 제작 → 유통 → 수익화)
+      — B2B SaaS / 플랫폼 → Two-sided market growth levers (수요측 × 공급측)
+      — Financial services → 채널 × 상품 × 고객 세그먼트 3축
+    Using a single frame across mismatched businesses is the #1 mistake ERs flag with "업의
+    본질은?" or "같은 frame으로 되겠어요?" — MECE at top level is OK, frame per bucket must fit.
+
 - Guesstimation → Present estimate upfront → Demand-side driver tree → Round numbers →
   Sanity-check with alternative method. Korea reference: population 5,100만명, Seoul ~50%.
   WTP-based pricing guesstimation: estimate time value of money for target customer segment.
@@ -347,7 +542,10 @@ SCORING CRITERIA (always include all 4)
 2. Confidence Level — hypothesis-first, definitive language, no hedging, quick estimate before deep dive
 3. Communication — workplan verbalized clearly; good clarifying questions (incl. regulatory);
    3-point exhibit reads; 15-30초 verbal wrap-up at end
-4. Creativity — goes beyond template; catches non-obvious angle (업의 본질, white space, external effects)
+4. Creativity (Café ICON 3-Tier) — Tier 1 (book answer) is the baseline only. What separates offers
+   from rejections is Tier 2 (beyond the CIP script) + Tier 3 (reframe into a 4대 산업 variant —
+   보험/유통/자동차/에너지 — with a specific Korean player and industry twist, not a generic swap).
+   Signals: 업의 본질, white space, external + internal effects, regulatory catch, scenario flip.
 
 RECOMMENDATION FORMAT:
 - Lead with the answer (yes/no) — never bury the lede
@@ -427,7 +625,7 @@ def analyze_case(question: str, api_key: str) -> dict:
     full_text = ""
     with client.messages.stream(
         model="claude-sonnet-4-6",
-        max_tokens=32000,
+        max_tokens=40000,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": question}],
     ) as stream:
@@ -550,6 +748,162 @@ def generate_html(question: str, data: dict, display_label: str = None) -> str:
         f'<div class="beyond-item"><div class="beyond-star">★</div><div class="beyond-text">{safe(b)}</div></div>'
         for b in im.get("beyond_the_script", [])
     )
+
+    # Café ICON 3-Tier Progression
+    ttp = data.get("three_tier_progression", {}) or {}
+    tier_3 = ttp.get("tier_3_industry_variant", {}) or {}
+    if not isinstance(tier_3, dict):
+        tier_3 = {}
+    ttp_html = ""
+    if ttp.get("tier_1_book_answer") or ttp.get("tier_2_beyond_script") or tier_3:
+        ttp_html = f"""
+    <div class="tier-card tier-1">
+      <div class="tier-header">
+        <span class="tier-badge tier-1-badge">Tier 1</span>
+        <span class="tier-label">Book Answer — CIP 스크립트 그대로</span>
+      </div>
+      <div class="tier-body">{safe(ttp.get('tier_1_book_answer', ''))}</div>
+    </div>
+    <div class="tier-arrow">↓</div>
+    <div class="tier-card tier-2">
+      <div class="tier-header">
+        <span class="tier-badge tier-2-badge">Tier 2</span>
+        <span class="tier-label">Beyond the Script — CIP보다 한 발 더</span>
+      </div>
+      <div class="tier-body">{safe(ttp.get('tier_2_beyond_script', ''))}</div>
+    </div>
+    <div class="tier-arrow">↓</div>
+    <div class="tier-card tier-3">
+      <div class="tier-header">
+        <span class="tier-badge tier-3-badge">Tier 3</span>
+        <span class="tier-label">4대 산업 Variant — {safe(tier_3.get('industry',''))}</span>
+      </div>
+      <div class="tier-body">
+        <div class="tier-sub-label">🔄 Reframed Question</div>
+        <div class="tier-sub-content">{safe(tier_3.get('reframed_question',''))}</div>
+        <div class="tier-sub-label">⚡ Key Twist</div>
+        <div class="tier-sub-content">{safe(tier_3.get('key_twist',''))}</div>
+      </div>
+    </div>"""
+
+    # Profit Diagnostic (conditional — only render if applicable)
+    pd = data.get("profit_diagnostic", {}) or {}
+    pd_applicable = pd.get("applicable") in (True, "true", "True", 1)
+    pd_section_html = ""
+    if pd_applicable:
+        pd_revenue = icon_list(pd.get("revenue_checks", []), "₩", "#2e7d32", "#e8f5e9", "#a5d6a7")
+        pd_cost = icon_list(pd.get("cost_checks", []), "−", "#e65100", "#fff3e0", "#ffcc80")
+        pd_market = icon_list(pd.get("market_checks", []), "◎", "#6a1b9a", "#f3e5f5", "#ce93d8")
+        rch_html = ""
+        for h in pd.get("root_cause_hypotheses", []):
+            rch_html += f"""
+        <div class="rc-card">
+          <div class="rc-rank">#{safe(h.get('rank',''))}</div>
+          <div class="rc-body">
+            <div class="rc-hyp">{safe(h.get('hypothesis',''))}</div>
+            <div class="rc-rationale">{safe(h.get('rationale',''))}</div>
+          </div>
+        </div>"""
+        pd_section_html = f"""
+  <div class="section s15">
+    <div class="section-header">
+      <div class="section-icon">💰</div>
+      <div class="section-title">Profit 진단 체크리스트 (Café ICON Deep Dive)</div>
+    </div>
+    <div class="pd-grid">
+      <div class="pd-col">
+        <div class="pd-col-label" style="color:#2e7d32;">매출 진단 (Revenue)</div>
+        {pd_revenue}
+      </div>
+      <div class="pd-col">
+        <div class="pd-col-label" style="color:#e65100;">비용 진단 (Cost)</div>
+        {pd_cost}
+      </div>
+      <div class="pd-col">
+        <div class="pd-col-label" style="color:#6a1b9a;">시장 진단 (Market)</div>
+        {pd_market}
+      </div>
+    </div>
+    <div class="sub-label" style="color:#bf360c;">🎯 Root Cause Hypotheses (우선순위 Top 3)</div>
+    {rch_html}
+  </div>"""
+
+    # Transcript Analysis (conditional — only for input_type == "transcript")
+    ta = data.get("transcript_analysis", {}) or {}
+    ta_applicable = ta.get("applicable") in (True, "true", "True", 1)
+    transcript_section_html = ""
+    if ta_applicable:
+        cp_html = ""
+        for cp in ta.get("challenge_points", []):
+            cp_html += f"""
+        <div class="cp-card">
+          <div class="cp-label">❗ 인터뷰어 챌린지</div>
+          <div class="cp-challenge">"{safe(cp.get('er_challenge', ''))}"</div>
+          <div class="cp-label">🔍 왜 나왔나</div>
+          <div class="cp-why">{safe(cp.get('why_challenged', ''))}</div>
+          <div class="cp-label">✨ 이렇게 답했어야</div>
+          <div class="cp-better">{safe(cp.get('better_response', ''))}</div>
+        </div>"""
+        missed_html = icon_list(ta.get("missed_opportunities", []), "✗", "#c62828", "#fce4ec", "#ef9a9a")
+        comparison_rows = ""
+        for i, row in enumerate(ta.get("comparison_table", [])):
+            row_bg = "#fafafa" if i % 2 else "white"
+            comparison_rows += f"""
+          <tr style="background:{row_bg};">
+            <td class="cmp-aspect">{safe(row.get('aspect', ''))}</td>
+            <td class="cmp-orig">{safe(row.get('original', ''))}</td>
+            <td class="cmp-model">{safe(row.get('model_answer', ''))}</td>
+          </tr>"""
+        transcript_section_html = f"""
+  <div class="section s16">
+    <div class="section-header">
+      <div class="section-icon">📝</div>
+      <div class="section-title">Transcript Analysis — 원본 응답 vs 모범답안</div>
+    </div>
+    <div class="ta-summary-label">📌 응시자가 실제로 한 것</div>
+    <div class="ta-summary">{safe(ta.get('original_approach_summary', ''))}</div>
+    <div class="sub-label" style="color:#00695c;">❗ 인터뷰어 챌린지 포인트</div>
+    {cp_html if cp_html else '<p style="color:#999;font-size:13px;">No challenges recorded.</p>'}
+    <div class="sub-label" style="color:#c62828;">✗ 놓친 포인트 (Missed Opportunities)</div>
+    {missed_html}
+    <div class="sub-label" style="color:#1565c0;">⚖️ 비교표 — 원본 vs 모범답안</div>
+    <table class="cmp-table">
+      <thead><tr><th>항목</th><th>원본 응답</th><th>모범답안</th></tr></thead>
+      <tbody>{comparison_rows}</tbody>
+    </table>
+  </div>"""
+
+    # 3-Axis Synergy (conditional — M&A / PMI)
+    sba = data.get("synergy_by_axis", {}) or {}
+    sba_applicable = sba.get("applicable") in (True, "true", "True", 1)
+    synergy_section_html = ""
+    if sba_applicable:
+        sba_revenue = icon_list(sba.get("revenue", []), "₩", "#2e7d32", "#e8f5e9", "#a5d6a7")
+        sba_cost = icon_list(sba.get("cost", []), "−", "#e65100", "#fff3e0", "#ffcc80")
+        sba_strategic = icon_list(sba.get("strategic", []), "◎", "#6a1b9a", "#f3e5f5", "#ce93d8")
+        lead_axis = safe(sba.get("lead_axis", ""))
+        synergy_section_html = f"""
+  <div class="section s17">
+    <div class="section-header">
+      <div class="section-icon">🔗</div>
+      <div class="section-title">3-Axis Synergy (M&amp;A / PMI) — 매출 · 비용 · 전략</div>
+    </div>
+    <div class="syn-grid">
+      <div class="syn-col">
+        <div class="syn-col-label" style="color:#2e7d32;">🟢 매출 시너지 (Revenue)</div>
+        {sba_revenue}
+      </div>
+      <div class="syn-col">
+        <div class="syn-col-label" style="color:#e65100;">🟡 비용 시너지 (Cost)</div>
+        {sba_cost}
+      </div>
+      <div class="syn-col">
+        <div class="syn-col-label" style="color:#6a1b9a;">🔵 전략 시너지 (Strategic)</div>
+        {sba_strategic}
+      </div>
+    </div>
+    {f'<div class="lead-axis-box"><div class="lead-axis-label">🎯 Lead Axis — 가장 큰 레버</div>{lead_axis}</div>' if lead_axis else ''}
+  </div>"""
 
     firm_detected = safe(data.get("firm_detected", ""))
     ceo_pitch = safe(data.get("ceo_pitch", ""))
@@ -1035,6 +1389,173 @@ def generate_html(question: str, data: dict, display_label: str = None) -> str:
       letter-spacing: 2px; opacity: 0.7; margin-bottom: 10px;
     }}
 
+    /* ── Café ICON 3-Tier Progression ── */
+    .s14 .section-icon {{ background:#fff8e1; }} .s14 .section-title {{ color:#ef6c00; }}
+    .tier-card {{
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 4px;
+    }}
+    .tier-1 {{ background: #f5f5f5; border-left: 5px solid #9e9e9e; }}
+    .tier-2 {{ background: #e0f7f4; border-left: 5px solid #00897b; }}
+    .tier-3 {{
+      background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+      border-left: 5px solid #ff8f00;
+    }}
+    .tier-header {{
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 10px;
+    }}
+    .tier-badge {{
+      font-size: 10px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      padding: 4px 10px; border-radius: 6px;
+      color: white; flex-shrink: 0;
+    }}
+    .tier-1-badge {{ background: #757575; }}
+    .tier-2-badge {{ background: #00897b; }}
+    .tier-3-badge {{ background: #ef6c00; }}
+    .tier-label {{
+      font-size: 12px; font-weight: 700; color: #333;
+      text-transform: uppercase; letter-spacing: 1px;
+    }}
+    .tier-body {{
+      font-size: 14px; color: #1a1a2e; line-height: 1.7;
+    }}
+    .tier-arrow {{
+      text-align: center; font-size: 22px;
+      color: #bdbdbd; margin: 2px 0;
+    }}
+    .tier-sub-label {{
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: #bf360c; margin: 12px 0 6px;
+    }}
+    .tier-sub-content {{
+      font-size: 14px; color: #1a1a2e; line-height: 1.65;
+      background: rgba(255,255,255,0.55);
+      padding: 10px 14px; border-radius: 6px;
+    }}
+
+    /* ── Profit Diagnostic ── */
+    .s15 .section-icon {{ background:#fce4ec; }} .s15 .section-title {{ color:#bf360c; }}
+    .pd-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px; margin-bottom: 22px;
+    }}
+    .pd-col {{
+      background: #fafafa; border: 1px solid #eee;
+      border-radius: 10px; padding: 16px 18px;
+    }}
+    .pd-col-label {{
+      font-size: 12px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px;
+    }}
+    .rc-card {{
+      display: flex; gap: 14px; align-items: flex-start;
+      background: #fff5f5; border-left: 4px solid #bf360c;
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+    }}
+    .rc-rank {{
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #bf360c; color: white;
+      font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }}
+    .rc-body {{ flex: 1; padding-top: 2px; }}
+    .rc-hyp {{
+      font-size: 14px; font-weight: 600;
+      color: #1a1a2e; margin-bottom: 3px; line-height: 1.55;
+    }}
+    .rc-rationale {{
+      font-size: 13px; color: #555; line-height: 1.55;
+    }}
+
+    /* ── Transcript Analysis (s16) ── */
+    .s16 .section-icon {{ background:#e0f2f1; }} .s16 .section-title {{ color:#00695c; }}
+    .ta-summary-label {{
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: #00695c; margin-bottom: 6px;
+    }}
+    .ta-summary {{
+      font-size: 14px; color: #1a1a2e;
+      background: #e0f2f1; border-left: 4px solid #00695c;
+      padding: 14px 18px; border-radius: 8px;
+      margin-bottom: 20px; line-height: 1.65;
+    }}
+    .cp-card {{
+      background: #fff8e1; border: 1px solid #ffe082;
+      border-left: 4px solid #f57f17; border-radius: 10px;
+      padding: 14px 18px; margin-bottom: 10px;
+    }}
+    .cp-label {{
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: #bf360c; margin: 10px 0 4px;
+    }}
+    .cp-card .cp-label:first-child {{ margin-top: 0; }}
+    .cp-challenge {{
+      font-size: 14px; font-style: italic; color: #1a1a2e;
+      background: white; padding: 10px 14px; border-radius: 6px;
+      line-height: 1.6;
+    }}
+    .cp-why {{ font-size: 13px; color: #555; line-height: 1.65; }}
+    .cp-better {{
+      font-size: 13px; color: #1b5e20; line-height: 1.65;
+      font-weight: 500; background: #f1f8e9;
+      padding: 8px 12px; border-radius: 6px;
+    }}
+    .cmp-table {{
+      width: 100%; border-collapse: collapse;
+      margin-top: 10px; font-size: 13px;
+      border-radius: 8px; overflow: hidden;
+    }}
+    .cmp-table th {{
+      background: #1565c0; color: white;
+      text-align: left; padding: 10px 12px;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    }}
+    .cmp-table td {{
+      padding: 11px 12px; border-bottom: 1px solid #f0f0f0;
+      vertical-align: top; line-height: 1.55;
+    }}
+    .cmp-table tr:last-child td {{ border-bottom: none; }}
+    .cmp-aspect {{ font-weight: 700; color: #1565c0; white-space: nowrap; }}
+    .cmp-orig {{ color: #c62828; }}
+    .cmp-model {{ color: #2e7d32; }}
+
+    /* ── 3-Axis Synergy (s17) ── */
+    .s17 .section-icon {{ background:#e8eaf6; }} .s17 .section-title {{ color:#283593; }}
+    .syn-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px; margin-bottom: 18px;
+    }}
+    .syn-col {{
+      background: #fafafa; border: 1px solid #eee;
+      border-radius: 10px; padding: 16px 18px;
+    }}
+    .syn-col-label {{
+      font-size: 12px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px;
+    }}
+    .lead-axis-box {{
+      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+      color: white; border-radius: 10px;
+      padding: 16px 20px; margin-top: 8px;
+      font-size: 14px; line-height: 1.7;
+    }}
+    .lead-axis-label {{
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 2px; opacity: 0.7; margin-bottom: 8px;
+      font-weight: 700;
+    }}
+
     @media print {{
       body {{ background: white; padding: 0; }}
       .section {{ box-shadow: none; border: 1px solid #e0e0e0; }}
@@ -1056,6 +1577,7 @@ def generate_html(question: str, data: dict, display_label: str = None) -> str:
     <div class="question-text">{safe(header_text)}</div>
     <div class="timestamp">Generated {timestamp}</div>
   </div>
+  {transcript_section_html}
 
   <!-- 1. Key Issue -->
   <div class="section s1">
@@ -1103,6 +1625,7 @@ def generate_html(question: str, data: dict, display_label: str = None) -> str:
     <div class="buckets-grid">{buckets_html}</div>
     {dt_html}
   </div>
+  {synergy_section_html}
 
   <!-- 6. Key Data -->
   <div class="section s5">
@@ -1194,6 +1717,16 @@ def generate_html(question: str, data: dict, display_label: str = None) -> str:
       <div class="great-label">Top-Tier 답변이란?</div>
       {safe(im.get('what_great_looks_like', ''))}
     </div>
+  </div>
+  {pd_section_html}
+
+  <!-- 13. Café ICON 3-Tier Progression -->
+  <div class="section s14">
+    <div class="section-header">
+      <div class="section-icon">🪜</div>
+      <div class="section-title">Café ICON 3-Tier 답변 계단 — Tier 1 → 2 → 3</div>
+    </div>
+    {ttp_html if ttp_html else '<p style="color:#999;font-size:13px;">No three-tier progression generated.</p>'}
   </div>
 
 </div>
